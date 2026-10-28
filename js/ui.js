@@ -50,6 +50,7 @@ export class UIManager {
     this.dom.liveLatency = document.getElementById("live-latency");
     this.dom.btnRecordMetrics = document.getElementById("btn-record-metrics");
     this.dom.writeOutputBar = document.getElementById("write-output-bar");
+    this.dom.writeCandidates = document.getElementById("write-candidates");
     this.dom.recognizedText = document.getElementById("recognized-text");
     this.dom.confidenceBadge = document.getElementById("confidence-badge");
     this.dom.toastContainer = document.getElementById("toast-container");
@@ -505,16 +506,54 @@ export class UIManager {
   }
 
   /**
-   * Appends recognized handwriting character to the UI output box.
+   * Sets visual buffering status while multi-stroke characters are buffered.
+   */
+  setBufferingStatus(isBuffering) {
+    if (!this.dom.confidenceBadge) return;
+    if (isBuffering) {
+      this.dom.confidenceBadge.textContent = "✍️ Buffering...";
+      this.dom.confidenceBadge.classList.add("buffering");
+    } else {
+      this.dom.confidenceBadge.classList.remove("buffering");
+    }
+  }
+
+  /**
+   * Appends recognized handwriting character to the UI output box with candidate chips.
    */
   appendHandwritingResult(result) {
     if (!result) return;
+    this.setBufferingStatus(false);
+
     if (this.dom.recognizedText) {
       this.dom.recognizedText.value += result.char;
     }
     if (this.dom.confidenceBadge) {
       this.dom.confidenceBadge.textContent = `'${result.char}' (${result.confidence}%)`;
     }
+
+    // Render clickable candidate suggestion chips
+    if (this.dom.writeCandidates && result.top3 && result.top3.length > 1) {
+      this.dom.writeCandidates.innerHTML = `<span class="candidate-label">Suggestions:</span>`;
+      for (const item of result.top3) {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "candidate-chip";
+        chip.textContent = `${item.char} (${item.confidence}%)`;
+        chip.title = `Click to replace last character with '${item.char}'`;
+        chip.addEventListener("click", () => {
+          if (this.dom.recognizedText && this.dom.recognizedText.value.length > 0) {
+            this.dom.recognizedText.value = this.dom.recognizedText.value.slice(0, -1) + item.char;
+            if (this.dom.confidenceBadge) {
+              this.dom.confidenceBadge.textContent = `'${item.char}' (${item.confidence}%)`;
+            }
+            this.showToast(`Selected '${item.char}'`);
+          }
+        });
+        this.dom.writeCandidates.appendChild(chip);
+      }
+    }
+
     this.showToast(`Recognized '${result.char}' (${result.confidence}%)`);
   }
 }

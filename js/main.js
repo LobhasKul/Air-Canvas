@@ -30,7 +30,7 @@ class AirCanvasApp {
     // Subsystems
     this.tracker = new HandTracker();
     this.classifier = new GestureClassifier();
-    this.smoother = new OneEuroFilter2D(1.0, 0.007, 1.0);
+    this.smoother = new OneEuroFilter2D(1.0, 0.02, 1.0);
     this.strokeManager = new StrokeManager(CANVAS_WIDTH, CANVAS_HEIGHT);
     this.shapeDetector = new ShapeDetector();
     this.handwriting = new HandwritingClassifier();
@@ -231,9 +231,13 @@ class AirCanvasApp {
       clearTimeout(this.handwritingTimer);
     }
 
+    if (this.ui) {
+      this.ui.setBufferingStatus(true);
+    }
+
     this.handwritingTimer = setTimeout(() => {
       this._processBufferedHandwriting();
-    }, 600);
+    }, 750);
   }
 
   /**
@@ -254,8 +258,19 @@ class AirCanvasApp {
       const result = await this.handwriting.classify(allPoints, strokes);
       if (result) {
         this.ui.appendHandwritingResult(result);
+
+        // In write mode, gently clear the written character strokes after 900ms
+        // so the canvas is clean and ready for the next letter
+        setTimeout(() => {
+          if (this.ui.appMode === "write") {
+            this.strokeManager.clearCanvas();
+          }
+        }, 900);
+      } else {
+        if (this.ui) this.ui.setBufferingStatus(false);
       }
     } catch (err) {
+      if (this.ui) this.ui.setBufferingStatus(false);
       console.error("Handwriting recognition error:", err);
     }
   }

@@ -12,7 +12,7 @@
 
 export const SMOOTHING_CONFIG = {
   DEFAULT_MIN_CUTOFF: 1.0,      // f_c_min: Minimum cutoff frequency in Hz (jitter reduction)
-  DEFAULT_BETA: 0.007,          // beta: Speed coefficient (higher = less lag during rapid movement)
+  DEFAULT_BETA: 0.02,           // beta: Speed coefficient (higher = less lag during rapid movement)
   DEFAULT_DERIVATIVE_CUTOFF: 1.0 // f_c_deriv: Fixed cutoff for speed low-pass filter in Hz
 };
 

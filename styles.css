@@ -336,6 +336,47 @@ video#cam {
   gap: 4px;
 }
 
+.write-candidates {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.candidate-label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.candidate-chip {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all var(--transition-speed);
+}
+
+.candidate-chip:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.confidence-badge.buffering {
+  background: rgba(245, 158, 11, 0.25) !important;
+  color: var(--warning) !important;
+}
+
 /* HUD Bottom Bar */
 .hud-bar {
   position: absolute;

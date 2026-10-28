@@ -15,9 +15,9 @@ export const TRACKING_CONFIG = {
   MODEL_ASSET_PATH:
     "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
   NUM_HANDS: 1,
-  MIN_HAND_DETECTION_CONFIDENCE: 0.6,
-  MIN_HAND_PRESENCE_CONFIDENCE: 0.6,
-  MIN_TRACKING_CONFIDENCE: 0.6,
+  MIN_HAND_DETECTION_CONFIDENCE: 0.5,
+  MIN_HAND_PRESENCE_CONFIDENCE: 0.5,
+  MIN_TRACKING_CONFIDENCE: 0.5,
   TARGET_WIDTH: 1280,
   TARGET_HEIGHT: 720
 };

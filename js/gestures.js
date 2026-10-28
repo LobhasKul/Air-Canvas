@@ -14,8 +14,8 @@
 
 export const GESTURE_CONFIG = {
   // Pinch distance normalized by palm scale
-  PINCH_ENTER_THRESHOLD: 0.35, // Distance ratio to ENTER pinch/draw mode
-  PINCH_EXIT_THRESHOLD: 0.40,  // Distance ratio to EXIT pinch/draw mode (fast, responsive release)
+  PINCH_ENTER_THRESHOLD: 0.38, // Distance ratio to ENTER pinch/draw mode
+  PINCH_EXIT_THRESHOLD: 0.48,  // Distance ratio to EXIT pinch/draw mode (fast, responsive release)
 
   // Finger extension threshold (distance from tip to wrist vs pip to wrist)
   FINGER_EXTEND_RATIO: 1.15,
@@ -80,12 +80,15 @@ export class GestureClassifier {
   }
 
   /**
-   * Computes the palm scale reference (distance between WRIST and MIDDLE_FINGER_MCP).
+   * Computes the palm scale reference (distance between WRIST and MIDDLE_FINGER_MCP in 2D screen space).
    * @param {Array} lm - 21 normalized landmarks
    * @returns {number} Scale reference length
    */
   getPalmScale(lm) {
-    const scale = dist3D(lm[LANDMARKS.WRIST], lm[LANDMARKS.MIDDLE_MCP]);
+    const scale = Math.hypot(
+      lm[LANDMARKS.WRIST].x - lm[LANDMARKS.MIDDLE_MCP].x,
+      lm[LANDMARKS.WRIST].y - lm[LANDMARKS.MIDDLE_MCP].y
+    );
     // Prevent division by zero if hand is partially occluded
     return Math.max(scale, 0.05);
   }
@@ -140,8 +143,11 @@ export class GestureClassifier {
     const indexTip = lm[LANDMARKS.INDEX_TIP];
     const middleTip = lm[LANDMARKS.MIDDLE_TIP];
 
-    // 1. Pinch Detection with Hysteresis
-    const pinchDist = dist3D(thumbTip, indexTip);
+    // 1. Pinch Detection with Hysteresis (Screen-space 2D distance with dampened depth)
+    const dx = thumbTip.x - indexTip.x;
+    const dy = thumbTip.y - indexTip.y;
+    const dz = ((thumbTip.z || 0) - (indexTip.z || 0)) * 0.20;
+    const pinchDist = Math.hypot(dx, dy, dz);
     const pinchRatio = pinchDist / palmScale;
 
     if (this.isPinched) {
@@ -162,11 +168,8 @@ export class GestureClassifier {
     if (this.isPinched) {
       // PINCH -> DRAW
       rawMode = "draw";
-      // Pointer is the intuitive midpoint between thumb tip and index tip
-      pointer = {
-        x: (thumbTip.x + indexTip.x) / 2,
-        y: (thumbTip.y + indexTip.y) / 2
-      };
+      // Anchor directly to indexTip for continuous, zero-jerk stroke starts and ends
+      pointer = { x: indexTip.x, y: indexTip.y };
     } else if (
       fingers.index.isExtended &&
       fingers.middle.isExtended &&
@@ -236,6 +239,19 @@ export class GestureClassifier {
     }
 
     const raw = this.classifyRaw(landmarks);
+
+    // Fast Draw Trigger: when user pinches, enter draw immediately without 3-frame delay
+    if (raw.mode === "draw" && this.currentMode !== "draw") {
+      this.currentMode = "draw";
+      this.candidateMode = "draw";
+      this.candidateFrames = GESTURE_CONFIG.DEBOUNCE_FRAMES;
+      return {
+        mode: this.currentMode,
+        pointer: raw.pointer,
+        isModeChanged: true,
+        pinchRatio: raw.pinchDistanceRatio
+      };
+    }
 
     // Fast Draw Release: when user unpinches, stop drawing immediately without delay
     if (this.currentMode === "draw" && raw.mode !== "draw") {
