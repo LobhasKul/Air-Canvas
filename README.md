@@ -148,4 +148,4 @@ To host this repository live on GitHub Pages:
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
-Created by [LobhasKul](https://github.com/LobhasKul).
+Created by [Lobhas Kulkarni](https://github.com/LobhasKul).
