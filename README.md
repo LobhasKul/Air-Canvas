@@ -1,30 +1,32 @@
 # Air Canvas 🎨
 ### *Transform Gestures into Art*
 
+[![Live Demo](https://img.shields.io/badge/Demo-Live%20on%20GitHub%20Pages-brightgreen?logo=githubpages)](https://lobhaskul.github.io/Air-Canvas/)
 [![GitHub repo](https://img.shields.io/badge/GitHub-LobhasKul%2FAir--Canvas-blue?logo=github)](https://github.com/LobhasKul/Air-Canvas)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Pure Web Standards](https://img.shields.io/badge/Stack-HTML5%20%7C%20CSS3%20%7C%20Vanilla%20ES6-success)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![MediaPipe](https://img.shields.io/badge/AI-MediaPipe%20Hand%20Landmarker-orange)](https://developers.google.com/mediapipe)
-[![TensorFlow.js](https://img.shields.io/badge/AI-TensorFlow.js-FF6F00?logo=tensorflow)](https://www.tensorflow.org/js)
 
 A high-performance, client-side, browser-based web application that lets users draw, erase, manipulate tools, snap geometric shapes, and recognize handwriting in the air using hand gestures tracked in real-time through their webcam.
 
-Built entirely with standard Web standards (HTML5 Canvas, CSS3, vanilla ES Modules), **MediaPipe Hand Landmarker** (via `@tasks-vision`), and **TensorFlow.js**. Operates 100% in the user's browser with **zero backend dependencies**, making it ideal for instant deployment on GitHub Pages, Netlify, or Vercel.
+👉 **Experience it live in your browser:** **[https://lobhaskul.github.io/Air-Canvas/](https://lobhaskul.github.io/Air-Canvas/)**
+
+Built entirely with standard Web standards (HTML5 Canvas, CSS3, vanilla ES Modules), **MediaPipe Hand Landmarker** (via `@tasks-vision`), and a high-speed **P+ Point-Cloud & Topological Handwriting Recognition Engine**. Operates 100% in the user's browser with **zero backend dependencies**.
 
 ---
 
 ## 🌟 Key Features
 
 ### 1. Touchless Gesture Recognition & Control
-Gestures are classified in real-time from 21 MediaPipe 3D hand landmarks with palm scale normalization and dual-threshold hysteresis:
-- **🤏 Pinch (Thumb tip + Index tip together)**: Draw fluid strokes. Exiting pinch stops drawing immediately on that exact frame with zero dragging tails.
+Gestures are classified in real-time from 21 MediaPipe hand landmarks with palm scale normalization, 2D screen-space distance with depth dampening, and dual-threshold hysteresis:
+- **🤏 Pinch (Thumb tip + Index tip together)**: Instant-trigger drawing. Pointer is consistently anchored to the index fingertip, eliminating spatial cursor jumping at stroke starts and ends.
 - **✌️ Two Fingers (Index + Middle extended)**: Selection mode. Hover over header buttons with an animated circular progress ring (dwell time: ~750ms) to trigger contactless clicks!
 - **🖐️ Open Palm (All fingers extended & spread)**: Large radius eraser. Cleans ink on an isolated offscreen layer without ever damaging or cutting through the webcam feed.
 - **✊ Fist (All fingers curled into palm)**: Pause drawing and freely reposition cursor.
 - **Idle (Neutral hand state)**: Smooth pointer hovering without modifying canvas.
 
 ### 2. 1€ (One Euro) Adaptive Low-Pass Filter
-Eliminates camera tracking jitter and hand tremors when drawing slowly or holding still ($f_{c,\min} = 1.0\text{ Hz}$), while dynamically opening cutoff frequency at high velocities ($\beta = 0.007$) for lag-free, responsive tracking during fast strokes.
+Eliminates camera tracking jitter and hand tremors when drawing slowly or holding still ($f_{c,\min} = 1.0\text{ Hz}$), while dynamically opening cutoff frequency at high velocities ($\beta = 0.02$) for crisp sharp corners (e.g. `M`, `N`, `Z`, `7`, `4`) and lag-free, responsive tracking during fast strokes.
 
 ### 3. Header-Integrated Drawing Toolbar
 All tools are organized within the top header bar, keeping the entire drawing stage unobstructed:
@@ -49,10 +51,12 @@ All tools are organized within the top header bar, keeping the entire drawing st
   - *Reversibility*: Snapped shapes flash with visual feedback; pressing **Undo** immediately reverts back to the raw hand-drawn stroke!
 
 ### 5. Touchless Handwriting Recognition ("Write" Mode)
-- Switch to **✍️ Write Mode** to write letters and numbers in the air.
-- **Multi-Stroke Buffering**: Groups strokes drawn within 600ms (e.g. crossbars of `A`, `T`, `H`, `E`, `X`) into a single character before classification.
-- **Spatial Zone Classification**: Evaluates a 9-zone raster density matrix and trajectory features covering all digits (`0-9`) and uppercase letters (`A-Z`).
-- Predictions are displayed with real-time confidence scores and automatically appended to an editable, copyable text bar.
+- Switch to **✍️ Write Mode** to write letters, numbers, and symbols in the air.
+- **P+ Point-Cloud & Topological Engine**: Sub-millisecond client-side classification across all **digits (`0-9`)**, all **uppercase letters (`A-Z`)**, and common math/punctuation symbols (`+`, `-`, `?`).
+- **Topological Micro-Discriminators**: Disambiguates visually similar pairs (e.g., `B` vs `D`/`8`/`O`, `R` vs `P`, `E` vs `F`, `U`/`V` vs `O`).
+- **Multi-Stroke Buffering (750ms)**: Buffers multiple strokes drawn in close sequence (e.g. crossbars of `A`, `T`, `H`, `E`, `X`, `4`) into a single character before classification.
+- **Interactive Suggestion Chips**: Displays top 3 alternative candidate predictions as clickable chips to effortlessly correct predictions with a single tap.
+- **Auto-Canvas Clear**: Automatically clears the completed character after 900ms so you can write consecutive letters without overlapping ink.
 
 ### 6. Live Performance HUD & 30-Second Benchmark Recorder
 - Press **P** or click ⚡ to reveal the live performance HUD displaying FPS and MediaPipe hand detection latency in milliseconds.
@@ -64,17 +68,17 @@ All tools are organized within the top header bar, keeping the entire drawing st
 
 ```
 Air-Canvas/
-├── index.html                  # Accessible layout, top header bar, modals, and HUD
-├── styles.css                  # Responsive design, light/dark themes, dwell ring animations
+├── index.html                  # Accessible layout, top header bar, write bar, modals, and HUD
+├── styles.css                  # Responsive design, light/dark themes, dwell ring & candidate chips
 ├── server.js                   # Zero-dependency local Node.js static file server
 ├── js/
 │   ├── main.js                 # App lifecycle, animation loop, render pipeline
 │   ├── handTracking.js         # MediaPipe HandLandmarker wrapper with GPU -> CPU fallback
-│   ├── gestures.js             # 21-landmark gesture classification with fast release
+│   ├── gestures.js             # Scale-invariant hand gesture classification & zero-jerk pointer
 │   ├── smoothing.js            # 1€ (One Euro) adaptive low-pass filter
-│   ├── strokes.js              # Stroke data model, styles, offscreen eraser layer, SVG/PNG export
+│   ├── strokes.js              # Stroke data model, brush styles, offscreen eraser, SVG/PNG export
 │   ├── shapes.js               # Geometric heuristics for line, circle, rect, triangle, heart snapping
-│   ├── handwriting.js          # Multi-stroke 9-zone density alphanumeric recognition engine
+│   ├── handwriting.js          # P+ Point-Cloud & topological alphanumeric recognition engine
 │   ├── metrics.js              # Live FPS, latency tracking & 30s CSV benchmark recording
 │   └── ui.js                   # Header controls, dwell-time progress ring, shortcuts & toasts
 ├── model/
@@ -117,9 +121,6 @@ Because webcam access requires a secure context (`window.isSecureContext`) or `l
 
 ### Option A: Built-in Node.js Server (Recommended)
 ```bash
-# Navigate to the project directory
-cd "Air Canvas"
-
 # Start the server (runs on port 8000)
 node server.js
 ```
@@ -132,20 +133,17 @@ python -m http.server 8000
 
 ---
 
-## 🚢 Deployment to GitHub Pages
+## 🚢 Live Deployment
 
-To host this repository live on GitHub Pages:
-1. Go to your repository on GitHub: **[LobhasKul/Air-Canvas](https://github.com/LobhasKul/Air-Canvas)**
-2. Click **Settings** > **Pages** (in the left sidebar).
-3. Under **Build and deployment**:
-   - **Source**: `Deploy from a branch`
-   - **Branch**: `main`, folder: `/ (root)`
-4. Click **Save**.
-5. Your application will be live at `https://lobhaskul.github.io/Air-Canvas/` with HTTPS enabled automatically!
+This application is deployed and hosted live on GitHub Pages:
+
+👉 **[https://lobhaskul.github.io/Air-Canvas/](https://lobhaskul.github.io/Air-Canvas/)**
+
+All pushes to the `main` branch trigger automatic GitHub Pages updates with zero configuration.
 
 ---
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).  
 Created by [Lobhas Kulkarni](https://github.com/LobhasKul).
