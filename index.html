@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Air Canvas - Interactive Touchless Gesture Drawing</title>
+  <meta name="description" content="Air Canvas - Transform Gestures into Art. Next-generation touchless digital canvas powered by real-time AI.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+</head>
+<body>
+  <div id="app">
+    <!-- Header / Top Bar -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="logo-icon" aria-hidden="true">🎨</span>
+        <h1>Air Canvas</h1>
+      </div>
+
+      <!-- Main Toolbar Controls in Header -->
+      <nav id="toolbar" class="toolbar-nav" aria-label="Canvas Tools">
+        <!-- Color Palette Group -->
+        <div class="tool-group colors" role="radiogroup" aria-label="Brush Colors">
+          <button type="button" class="color-swatch" data-color="#ff3b30" style="--swatch:#ff3b30" role="radio" aria-checked="false" aria-label="Crimson Red (1)" title="Red (1)"></button>
+          <button type="button" class="color-swatch active" data-color="#2457ff" style="--swatch:#2457ff" role="radio" aria-checked="true" aria-label="Electric Blue (2)" title="Blue (2)"></button>
+          <button type="button" class="color-swatch" data-color="#22c55e" style="--swatch:#22c55e" role="radio" aria-checked="false" aria-label="Emerald Green (3)" title="Green (3)"></button>
+          <button type="button" class="color-swatch" data-color="#facc15" style="--swatch:#facc15" role="radio" aria-checked="false" aria-label="Cyber Yellow (4)" title="Yellow (4)"></button>
+          <button type="button" class="color-swatch" data-color="#a855f7" style="--swatch:#a855f7" role="radio" aria-checked="false" aria-label="Neon Violet (5)" title="Violet (5)"></button>
+          <button type="button" class="color-swatch" data-color="#ffffff" style="--swatch:#ffffff" role="radio" aria-checked="false" aria-label="Pure White (6)" title="White (6)"></button>
+        </div>
+
+        <div class="tool-separator" aria-hidden="true"></div>
+
+        <!-- Brush Size Controls -->
+        <div class="tool-group brush-sizes" aria-label="Brush Size">
+          <button type="button" id="btn-size-down" class="tool-btn" aria-label="Decrease Brush Size ([)" title="Decrease Size ([)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 13H5v-2h14v2z"/></svg>
+          </button>
+          <span id="brush-size-display" class="size-indicator" aria-live="polite">8px</span>
+          <button type="button" id="btn-size-up" class="tool-btn" aria-label="Increase Brush Size (])" title="Increase Size (])">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          </button>
+        </div>
+
+        <div class="tool-separator" aria-hidden="true"></div>
+
+        <!-- Brush Styles Group -->
+        <div class="tool-group brush-styles" role="radiogroup" aria-label="Brush Style">
+          <button type="button" class="style-btn active" data-style="solid" role="radio" aria-checked="true" aria-label="Solid Brush" title="Solid Line">Solid</button>
+          <button type="button" class="style-btn" data-style="neon" role="radio" aria-checked="false" aria-label="Neon Glow Brush" title="Neon Glow">Neon</button>
+          <button type="button" class="style-btn" data-style="dashed" role="radio" aria-checked="false" aria-label="Dashed Brush" title="Dashed Line">Dashed</button>
+          <button type="button" class="style-btn" data-style="calligraphy" role="radio" aria-checked="false" aria-label="Calligraphy Brush" title="Calligraphy">Calligraphy</button>
+        </div>
+
+        <div class="tool-separator" aria-hidden="true"></div>
+
+        <!-- History & Canvas Actions -->
+        <div class="tool-group history-actions" aria-label="Actions">
+          <button type="button" id="btn-undo" class="tool-btn" aria-label="Undo (Z)" title="Undo (Z)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+          </button>
+          <button type="button" id="btn-redo" class="tool-btn" aria-label="Redo (Y)" title="Redo (Y)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg>
+          </button>
+          <button type="button" id="btn-clear" class="tool-btn danger" aria-label="Clear Canvas (C)" title="Clear (C)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          </button>
+        </div>
+
+        <div class="tool-separator" aria-hidden="true"></div>
+
+        <!-- Mode & Background Toggles -->
+        <div class="tool-group toggles" aria-label="Mode Controls">
+          <button type="button" id="btn-toggle-mode" class="tool-btn" aria-pressed="false" aria-label="Toggle Handwriting Write Mode (W)" title="Write Mode (W)">
+            ✍️ Write
+          </button>
+          <button type="button" id="btn-toggle-bg" class="tool-btn" aria-label="Toggle Background (B)" title="Toggle Background (B)">
+            🖼️ <span id="bg-mode-label">WEBCAM</span>
+          </button>
+        </div>
+
+        <div class="tool-separator" aria-hidden="true"></div>
+
+        <!-- Export Dropdown / Buttons -->
+        <div class="tool-group exports" aria-label="Export Drawing">
+          <button type="button" id="btn-save-png" class="tool-btn" aria-label="Save PNG (S)" title="Save PNG (S)">PNG</button>
+          <button type="button" id="btn-save-transparent" class="tool-btn" aria-label="Save Transparent PNG (T)" title="Transparent PNG (T)">Alpha</button>
+          <button type="button" id="btn-save-svg" class="tool-btn" aria-label="Save Vector SVG (V)" title="Save SVG (V)">SVG</button>
+        </div>
+      </nav>
+
+      <!-- Quick Action Controls -->
+      <div class="header-actions">
+        <button id="theme-toggle" class="icon-btn" aria-label="Toggle Dark/Light Theme" title="Toggle Theme">
+          ☀️
+        </button>
+        <button id="btn-toggle-metrics" class="icon-btn" aria-label="Toggle Performance Panel (P)" title="Performance Panel (P)">
+          ⚡
+        </button>
+        <button id="btn-help" class="icon-btn" aria-label="Keyboard Shortcuts & Gestures (?)" title="Help (?)">
+          ❓
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Viewport Stage -->
+    <main id="stage" class="stage-container" role="region" aria-label="Drawing Stage">
+      <!-- Hidden Video Element for Webcam Feed -->
+      <video id="cam" playsinline muted autoplay></video>
+
+      <!-- Main Render Canvas -->
+      <canvas id="view" width="1280" height="720" aria-label="Drawing canvas feed"></canvas>
+
+      <!-- Handwriting Recognition Output Bar (Write Mode) -->
+      <div id="write-output-bar" class="write-bar hidden" role="region" aria-label="Handwriting Recognition Output">
+        <div class="write-bar-header">
+          <span class="write-title">✍️ Handwriting Recognition</span>
+          <span id="confidence-badge" class="confidence-badge" aria-live="polite">Ready</span>
+        </div>
+        <div class="write-bar-body">
+          <input type="text" id="recognized-text" placeholder="Draw letters/digits in the air..." aria-label="Recognized text output">
+          <div class="write-bar-actions">
+            <button type="button" id="btn-backspace-text" class="icon-btn" aria-label="Backspace" title="Backspace">⌫</button>
+            <button type="button" id="btn-copy-text" class="icon-btn" aria-label="Copy Text" title="Copy Text">📋</button>
+            <button type="button" id="btn-clear-text" class="icon-btn" aria-label="Clear Text" title="Clear Text">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HUD Status Bar -->
+      <footer id="hud-status" class="hud-bar" aria-live="polite">
+        <div class="hud-item">
+          <span id="hand-presence" class="presence-dot" title="Hand tracking state"></span>
+          <span class="hud-label">Gesture:</span>
+          <span id="status-badge" class="badge-mode" data-mode="idle">IDLE</span>
+        </div>
+        <div class="hud-item hud-gesture-hint">
+          <span>🤏 Pinch = Draw</span>
+          <span class="sep">•</span>
+          <span>✌️ 2 Fingers = Select</span>
+          <span class="sep">•</span>
+          <span>🖐️ Palm = Erase</span>
+          <span class="sep">•</span>
+          <span>✊ Fist = Pause</span>
+        </div>
+      </footer>
+
+      <!-- Live Performance Panel (Toggled via P) -->
+      <aside id="metrics-panel" class="metrics-panel hidden" aria-label="Performance Metrics">
+        <div class="metrics-header">
+          <h3>⚡ Performance Metrics</h3>
+        </div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-title">Display FPS</span>
+            <span id="live-fps" class="metric-value">--</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">MediaPipe Latency</span>
+            <span id="live-latency" class="metric-value">-- ms</span>
+          </div>
+        </div>
+        <button type="button" id="btn-record-metrics" class="record-btn">
+          Record 30s Benchmark CSV
+        </button>
+      </aside>
+
+      <!-- Toast Notification Container -->
+      <div id="toast-container" class="toast-stack" aria-live="assertive" aria-atomic="true"></div>
+
+      <!-- Start Screen / Camera Permission Dialog -->
+      <div id="start-screen" class="start-overlay" role="dialog" aria-modal="true" aria-labelledby="start-title">
+        <div class="start-card">
+          <div class="start-hero">
+            <span class="start-icon">🎨</span>
+            <h2 id="start-title">Welcome to Air Canvas</h2>
+            <p class="start-tagline">Transform Gestures into Art</p>
+          </div>
+
+          <div class="gesture-cards-grid">
+            <div class="gesture-card">
+              <span class="card-icon">🤏</span>
+              <h4>Pinch</h4>
+              <p>Thumb & index tips together to draw</p>
+            </div>
+            <div class="gesture-card">
+              <span class="card-icon">✌️</span>
+              <h4>Two Fingers</h4>
+              <p>Index & middle up to hover & dwell-click</p>
+            </div>
+            <div class="gesture-card">
+              <span class="card-icon">🖐️</span>
+              <h4>Open Palm</h4>
+              <p>Spread all fingers to erase with wide radius</p>
+            </div>
+            <div class="gesture-card">
+              <span class="card-icon">✊</span>
+              <h4>Fist</h4>
+              <p>Curl fingers to pause and move cursor</p>
+            </div>
+          </div>
+
+          <p id="start-loading-status" class="loading-status" aria-live="polite"></p>
+
+          <button type="button" id="btn-start-camera" class="primary-btn">
+            Enable Camera & Start
+          </button>
+        </div>
+      </div>
+
+      <!-- Keyboard Shortcuts & Help Modal -->
+      <div id="help-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <div class="modal-card">
+          <div class="modal-header">
+            <h3 id="help-title">Keyboard Shortcuts & Guide</h3>
+            <button type="button" id="btn-close-help" class="icon-btn" aria-label="Close Help">✕</button>
+          </div>
+          <div class="modal-body">
+            <table class="shortcuts-table">
+              <thead>
+                <tr><th>Action</th><th>Key</th><th>Gesture Alternative</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Draw</td><td><kbd>Space</kbd> / Drag</td><td>🤏 Pinch (Thumb + Index)</td></tr>
+                <tr><td>Select & Dwell Click</td><td>Hover</td><td>✌️ Index + Middle extended</td></tr>
+                <tr><td>Eraser</td><td><kbd>E</kbd></td><td>🖐️ Open Palm</td></tr>
+                <tr><td>Pause</td><td><kbd>Esc</kbd></td><td>✊ Fist</td></tr>
+                <tr><td>Shape Snapping</td><td>Pause 600ms</td><td>Hold hand stationary at stroke end</td></tr>
+                <tr><td>Colors (1 - 6)</td><td><kbd>1</kbd> - <kbd>6</kbd></td><td>✌️ Hover over color swatch</td></tr>
+                <tr><td>Brush Size Down / Up</td><td><kbd>[</kbd> / <kbd>]</kbd></td><td>✌️ Hover over &minus; / +</td></tr>
+                <tr><td>Undo / Redo</td><td><kbd>Z</kbd> / <kbd>Y</kbd></td><td>✌️ Hover over Undo / Redo</td></tr>
+                <tr><td>Clear Canvas</td><td><kbd>C</kbd></td><td>✌️ Hover over Clear</td></tr>
+                <tr><td>Export PNG / Transparent</td><td><kbd>S</kbd> / <kbd>T</kbd></td><td>✌️ Hover over PNG / Alpha</td></tr>
+                <tr><td>Export SVG</td><td><kbd>V</kbd></td><td>✌️ Hover over SVG</td></tr>
+                <tr><td>Toggle Background</td><td><kbd>B</kbd></td><td>✌️ Hover over BG</td></tr>
+                <tr><td>Toggle Write Mode</td><td><kbd>W</kbd></td><td>✌️ Hover over Write</td></tr>
+                <tr><td>Performance Panel</td><td><kbd>P</kbd></td><td>✌️ Hover over ⚡</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Main ES Module Entry Point -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
